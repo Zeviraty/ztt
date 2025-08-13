@@ -40,7 +40,7 @@ def border(h):
 def statusbar(mode:str = "SONG",key: str =" ", file:str = "Empty", saved:bool = True, command:bool = False):
     if not command:
         term.ip(3,term.wh()[1],f"-- {mode} --   ")
-        term.ip(term.wh()[0]//2,term.wh()[1],f"{file}{' [+]' if not saved else ''}")
+        term.ip(int((term.wh()[0]/2)-(len(file)/2)),term.wh()[1],f"{file}{' [+]' if not saved else ''}")
         term.ip(term.wh()[0]-3,term.wh()[1],f'({key})')
     else:
         term.ip(1,term.wh()[1], " "*(term.wh()[0]-1))
@@ -92,8 +92,10 @@ def main():
             case ':':
                 statusbar(mode,key,command=True)
 
-            #case _:
-            #    print(repr(key))
+            case _:
+                if key.isnumeric() and mode == "PATTERN":
+                    pass
+                #print(repr(key))
 
         statusbar(mode,key)
         if EXIT == True:
