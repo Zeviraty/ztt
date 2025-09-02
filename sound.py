@@ -1,5 +1,6 @@
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 
 def sine_wave(frequency:int, duration:float, samplerate:int=44100):
     t = np.linspace(0, duration, int(samplerate * duration), endpoint=False)
@@ -23,4 +24,10 @@ def noise_wave(duration:float, samplerate:int=44100):
 def play(wave,samplerate=44100):
     wave = wave.astype(np.float32)
     sd.play(wave, samplerate)
+
+def play_wav(location:str):
+    data, fs = sf.read(location)
+    sd.play(data, fs)
+
+def wait():
     sd.wait()
