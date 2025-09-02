@@ -1,5 +1,9 @@
 import zte as term
 import signal
+import threading
+import sys
+import sound
+import plot
 
 global EXIT
 EXIT = False
@@ -9,7 +13,6 @@ def run_command(command: str):
     match command:
         case "Q" | "q!": EXIT = True
         case "q": quit()
-
 
 def quit():
     global EXIT
@@ -38,6 +41,8 @@ def border(h):
     term.border("╭","╮","╰","╯",h=term.wh()[1]-1)
 
 def statusbar(mode:str = "SONG",key: str =" ", file:str = "Empty", saved:bool = True, command:bool = False):
+    if key == "\n":
+        key = ""
     if not command:
         term.ip(3,term.wh()[1],f"-- {mode} --   ")
         term.ip(int((term.wh()[0]/2)-(len(file)/2)),term.wh()[1],f"{file}{' [+]' if not saved else ''}")
@@ -48,13 +53,13 @@ def statusbar(mode:str = "SONG",key: str =" ", file:str = "Empty", saved:bool = 
         command = ""
         while True:
             key = term.getch()
-            if key == "\r":
+            if key == '\r' or key == '\n':
                 term.ip(1,term.wh()[1], " "*(term.wh()[0]-1))
                 statusbar(mode,key,file,saved)
                 term.ip(1,term.wh()[1]," ")
                 run_command(command)
                 break
-            elif key == '\x7f':
+            elif key == '\x7f' or key == '\x08':
                 command = command[:-1]
                 term.ip(2+len(command),term.wh()[1]," ")
             elif len(key) == 1 and 32 <= ord(key) <= 126:
@@ -95,6 +100,7 @@ def main():
             case _:
                 if key.isnumeric() and mode == "PATTERN":
                     pass
+                
                 #print(repr(key))
 
         statusbar(mode,key)
@@ -106,6 +112,22 @@ def main():
     term.raw(False)
     term.rh()
 
+def _start_windows_resize_monitor(callback, interval=0.5):
+    last_size = term.wh()
+    while True:
+        try:
+            current_size = term.wh()
+            if current_size != last_size:
+                last_size = current_size
+                callback(current_size,'')
+        except OSError:
+            pass
+        import time
+        time.sleep(interval)
+
 if __name__ == "__main__":
-    signal.signal(signal.SIGWINCH, on_resize)
+    if sys.platform == "win32":
+        threading.Thread(target=_start_windows_resize_monitor, args=(on_resize,), daemon=True).start()
+    else:
+        signal.signal(signal.SIGWINCH, on_resize)
     main()
